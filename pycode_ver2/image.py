@@ -3,10 +3,6 @@ import cv2
 import numpy as np
 
 class ImageProcessor:
-    # def __init__(self):
-    #     self.label = ['1 : 0', '2 : 1', '3 : 2', '4 : 3', '5 : 4',
-    #                   'down : 5', 'left : 6', 'right : 7', 'up : 8']
-
 
     def img_processed(self, img_ori):
         # 원본이미지를 이진화 작업 후 외각선에서 꼭짓점을 구한다.
@@ -52,8 +48,8 @@ class ImageProcessor:
         # 이미지 인식률을 높이기 위해 이미지를  RGB값에서 특정값을 기준으로 이진화 한다.
         RGB_img = cv2.cvtColor(warped_image, cv2.COLOR_BGR2RGB)
         R_img1, G_img1, B_img1 = cv2.split(RGB_img)
-
-        N = 30
+        
+        N = 150 # 해당 값을 기준으로 큰것은 255로 작은것은 0으로 반환하여 이미지 이진화
 
         for h in range(RGB_img.shape[0]):
             for w in range(RGB_img.shape[1]):
