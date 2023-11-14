@@ -36,13 +36,17 @@ def create_window():
     def block_move():
         global block_label
         cap = cv2.VideoCapture(0)
+        
         if cap.isOpened():
+            print("************************************")
+            print("카메라에 좌우반전이 적용되어 있습니다.")
+            print("************************************")
             while True:
                 ret, frame = cap.read()
                 
                 if ret:
                     flipped_frame = cv2.flip(frame, -1)
-                    # print("카메라에 좌우반전이 적용되어 있습니다.")
+                    
                     cv2.imshow('camera', flipped_frame)
 
                     key = cv2.waitKey(1)
@@ -70,9 +74,9 @@ def create_window():
                             block_name = predictions_dir + ' ' + predictions_num
                             block_label = block_name
 
-                            print("예측 클래스:", block_name)
+                            print("예측 값:", block_name)
 
-                            print(pre_value_dir, pre_value_num)
+                            print(f"방향 예측확률 : {pre_value_dir}, 숫자 예측 확률 : {pre_value_num}")
 
                             # 예측률이 90% 미만일 경우 에러 메세지 반환
                             if pre_value_dir < 0.9 or pre_value_num < 0.9:
@@ -121,8 +125,8 @@ def create_window():
 
 
     def player_move():
-        global mx, my, maze, block_label
-        print("player_move")
+        global mx, my, maze, block_label, square_weight
+        print("캐릭터가 이동합니다.")
 
         dir = block_label.split(' ')[0]
         num = int(block_label.split(' ')[1])
@@ -137,8 +141,8 @@ def create_window():
                     show_warning()
             if block == 0:
                 for i in range(0,int(num)):
-                    canvas.create_rectangle(mx * 70, (my-i) * 70, mx * 70 + 69, (my-i) * 70 + 69, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 0, -1*num * 70)
+                    canvas.create_rectangle(mx * square_weight +1, (my-i) * square_weight+1, mx * square_weight + square_weight-1, (my-i) * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 0, -1*num * square_weight)
                 my -= 1*num
 
         if dir == "down":
@@ -152,8 +156,8 @@ def create_window():
             if block == 0:
                 
                 for i in range(0,int(num)):
-                    canvas.create_rectangle(mx * 70, (my+i) * 70, mx * 70 + 69, (my+i) * 70 + 69, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 0, 1*num * 70)
+                    canvas.create_rectangle(mx * square_weight +1, (my+i) * square_weight+1, mx * square_weight + square_weight-1, (my+i) * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 0, 1*num * square_weight)
                 my += 1*num
 
         if dir == "left" :
@@ -167,16 +171,14 @@ def create_window():
             if block == 0:
                 
                 for i in range(0,int(num)):
-                    canvas.create_rectangle((mx-i) * 70, my * 70, (mx-i) * 70 + 69, my * 70 + 69, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, -1*num * 70, 0)
+                    canvas.create_rectangle((mx-i) * square_weight + 1, my * square_weight +1, (mx-i) * square_weight + square_weight -1, my * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, -1*num * square_weight, 0)
 
                 mx -= 1*num
 
         if dir == "right":
-            print("재이동 mx", mx)
             block = 0
             for i in range(1,int(num)+1):
-                print("for",i)
                 if maze[my][mx+i] == 1:
                     block = 1
                     print("이동불가")
@@ -185,11 +187,11 @@ def create_window():
             if block == 0:
 
                 for i in range(0,int(num)):
-                    canvas.create_rectangle((mx+i) * 70, my * 70, (mx+i) * 70 + 69, my * 70 + 69, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 1*num * 70, 0)
+                    canvas.create_rectangle((mx+i) * square_weight +1, my * square_weight + 1, (mx+i) * square_weight + square_weight -1, my * square_weight + square_weight -1 , fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 1*num * square_weight, 0)
 
                 mx += 1*num
-                print("mx_val",mx)
+
 
         if maze[my][mx] == 2:
             messagebox.showinfo("미션 성공", "목적지에 도착! 축하합니다.")
@@ -204,27 +206,27 @@ def create_window():
         redraw_maze(maze, end_image_path, end_coords)
 
     def on_button_click_tutorial():
-        global photo
+        global photo,square_weight
         original_image = Image.open("../event_img/tutorial.png")
         # 이미지를 캔버스 사이즈에 맞게 변경
-        resized_image = original_image.resize((700, 490), Image.ANTIALIAS)
+        resized_image = original_image.resize((square_weight * 10, square_weight* 7), Image.ANTIALIAS)
         photo = ImageTk.PhotoImage(resized_image, master=window)
         canvas.delete("all")
         # 이미지를 캔버스 정가운데 배치
-        canvas.create_image(350,245, image=photo)
+        canvas.create_image((square_weight * 10)//2,(square_weight* 7)//2, image=photo)
 
 
     def redraw_maze(maze, end_image_path, end_coords):
-        global img_end, player_img, player, mx, my, line_coords
+        global img_end, player_img, player, mx, my, line_coords,square_weight
         canvas.delete("all")
         for y in range(7):
             for x in range(10):
                 if maze[y][x] == 1:
-                    canvas.create_rectangle(x * 70, y * 70, (x + 1) * 70, (y + 1) * 70, fill="skyblue", outline="black")
+                    canvas.create_rectangle(x * square_weight, y * square_weight, (x + 1) * square_weight, (y + 1) * square_weight, fill="skyblue", outline="white")
         img_end = tk.PhotoImage(file=end_image_path, master=window)
         canvas.create_image(*end_coords, image=img_end)
         player_img = tk.PhotoImage(file="../event_img/ai_img.png", master=window)
-        player = canvas.create_image(105, 105, image=player_img)
+        player = canvas.create_image(square_weight*1.5, square_weight*1.5, image=player_img)
         mx = 1
         my = 1
         line_coords = []
@@ -270,7 +272,8 @@ def create_window():
         
         maze = maze_re
         return maze
-
+    global square_weight
+    square_weight = 100 # 한칸당 할당된 너비
     maze = maze_make(1)
     line_coords = []
     window = tkinter.Tk()
@@ -278,15 +281,15 @@ def create_window():
     
     frame_canvas = tk.Frame(window)
     frame_canvas.pack()
-    canvas = tk.Canvas(frame_canvas, width=700, height=490, bg="white")
+    canvas = tk.Canvas(frame_canvas, width=square_weight*10, height=square_weight*7, bg="white")
     canvas.pack()
     
 
     end_image_path = "../event_img/end_img.png"
     # 미로별 끝나는 지점의 좌표
-    end_coords1 = (590, 385)
-    end_coords2 = (590, 385)
-    end_coords3 = (455, 105)
+    end_coords1 = (8*square_weight + square_weight//2 , 5*square_weight+square_weight//2)
+    end_coords2 = (8*square_weight + square_weight//2, 5*square_weight + square_weight//2)
+    end_coords3 = (6*square_weight + square_weight//2, 1*square_weight + square_weight//2)
     # 초기 이미지 설정
     on_button_click_tutorial()
 
