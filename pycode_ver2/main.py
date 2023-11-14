@@ -8,8 +8,8 @@ import os
 import keras
 import numpy as np
 from PIL import Image, ImageTk
+import time
 
-import sys
 
 model_path = "../model/model_sep.h5"
 model_sep = keras.models.load_model(os.path.abspath(model_path))
@@ -22,7 +22,6 @@ def create_window():
         prediction_val = model_sep.predict(np.expand_dims(img, axis=0))
         predicted_class = np.argmax(prediction_val)
         predicted_class_label = label[predicted_class].split(' : ')[0]
-
         # 인식된 결과와, 예측률을 반환
         return predicted_class_label, np.max(prediction_val)
 
@@ -39,13 +38,14 @@ def create_window():
         
         if cap.isOpened():
             print("************************************")
-            print("카메라에 좌우반전이 적용되어 있습니다.")
+            print("카메라에 180도 회전이 적용되어 있습니다.")
             print("************************************")
             while True:
                 ret, frame = cap.read()
                 
                 if ret:
                     flipped_frame = cv2.flip(frame, -1)
+                    flipped_frame = cv2.resize(flipped_frame,(900,675))
                     
                     cv2.imshow('camera', flipped_frame)
 
@@ -86,6 +86,7 @@ def create_window():
                                             'up 1', 'up 2', 'up 3', 'up 4', 'up 5']
                                 if block_name in block_list:
                                     event_image = cv2.imread(f'../event_img/{block_name}.jpg')
+                                    event_image = cv2.resize(event_image,(900,675)) # 이미지 사이즈 변경
                                     cv2.imshow('camera', event_image)
 
                                     while True:
@@ -102,9 +103,9 @@ def create_window():
                                 else:
                                     print("블럭 인식 안됨")
                                     event_image = cv2.imread(f'../event_img/no block.jpg')
+                                    event_image = cv2.resize(event_image,(900,675)) # 이미지 사이즈 변경
                                     cv2.imshow('camera', event_image)
                                     key_overlay = cv2.waitKey(0)
-
 
                             else:
                                 
@@ -130,19 +131,20 @@ def create_window():
 
         dir = block_label.split(' ')[0]
         num = int(block_label.split(' ')[1])
-
+        # 방향값과 숫자가 들어오면 for 문을 순환하며 이동할 수 있는 곳인지 확인
         if dir == "up" :
             block = 0
             for i in range(1,int(num)+1):
                 if maze[my-i][mx] == 1:
                     block = 1
                     print("이동불가")
-
+                    # 이동이 불가할 경우 messagebox를 나타냄
                     show_warning()
             if block == 0:
                 for i in range(0,int(num)):
                     canvas.create_rectangle(mx * square_weight +1, (my-i) * square_weight+1, mx * square_weight + square_weight-1, (my-i) * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 0, -1*num * square_weight)
+                    canvas.move(player, 0, -1 * square_weight)
+                    time.sleep(0.5)
                 my -= 1*num
 
         if dir == "down":
@@ -151,13 +153,13 @@ def create_window():
                 if maze[my+i][mx] == 1:
                     block = 1
                     print("이동불가")
-
                     show_warning()
             if block == 0:
                 
                 for i in range(0,int(num)):
                     canvas.create_rectangle(mx * square_weight +1, (my+i) * square_weight+1, mx * square_weight + square_weight-1, (my+i) * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 0, 1*num * square_weight)
+                    canvas.move(player, 0, 1 * square_weight)
+                    time.sleep(0.5)
                 my += 1*num
 
         if dir == "left" :
@@ -166,13 +168,13 @@ def create_window():
                 if maze[my][mx-i] == 1:
                     block = 1
                     print("이동불가")
-
                     show_warning()
             if block == 0:
                 
                 for i in range(0,int(num)):
                     canvas.create_rectangle((mx-i) * square_weight + 1, my * square_weight +1, (mx-i) * square_weight + square_weight -1, my * square_weight + square_weight-1, fill="pink", width=0, tag="PAINT")
-                canvas.move(player, -1*num * square_weight, 0)
+                    canvas.move(player, -1 * square_weight, 0)
+                    time.sleep(0.5)
 
                 mx -= 1*num
 
@@ -182,13 +184,13 @@ def create_window():
                 if maze[my][mx+i] == 1:
                     block = 1
                     print("이동불가")
-
                     show_warning()
             if block == 0:
 
                 for i in range(0,int(num)):
                     canvas.create_rectangle((mx+i) * square_weight +1, my * square_weight + 1, (mx+i) * square_weight + square_weight -1, my * square_weight + square_weight -1 , fill="pink", width=0, tag="PAINT")
-                canvas.move(player, 1*num * square_weight, 0)
+                    canvas.move(player, 1 * square_weight, 0)
+                    time.sleep(0.5)
 
                 mx += 1*num
 
@@ -273,7 +275,7 @@ def create_window():
         maze = maze_re
         return maze
     global square_weight
-    square_weight = 100 # 한칸당 할당된 너비
+    square_weight = 90 # 한칸당 할당된 너비
     maze = maze_make(1)
     line_coords = []
     window = tkinter.Tk()
@@ -283,6 +285,8 @@ def create_window():
     frame_canvas.pack()
     canvas = tk.Canvas(frame_canvas, width=square_weight*10, height=square_weight*7, bg="white")
     canvas.pack()
+    # 열리는 위치 지정
+    window.geometry(f"{square_weight*10}x{square_weight*7+30}+10+10")
     
 
     end_image_path = "../event_img/end_img.png"
