@@ -1,6 +1,6 @@
 import tkinter
 import tkinter as tk
-from tkinter import messagebox, Canvas, Toplevel, PhotoImage, Label
+from tkinter import messagebox
 import cv2
 import threading
 from image import ImageProcessor
@@ -13,9 +13,6 @@ import sys
 
 model_path = "../model/model_sep.h5"
 model_sep = keras.models.load_model(os.path.abspath(model_path))
-
-
-
 
 def create_window():
 
@@ -45,14 +42,16 @@ def create_window():
                 
                 if ret:
                     flipped_frame = cv2.flip(frame, -1)
+                    # print("카메라에 좌우반전이 적용되어 있습니다.")
                     cv2.imshow('camera', flipped_frame)
 
                     key = cv2.waitKey(1)
                     
                     if key != -1:
-                        if key == 27:
+                        if key == 27: # esc
                             break
-                        elif key == 32:
+                        elif key == 32: # spacebar
+                            
                             cv2.imwrite('../move_img/photo.jpg', flipped_frame)
                             print("촬영을 완료했습니다.")
 
@@ -88,6 +87,8 @@ def create_window():
                                     while True:
                                         key_overlay = cv2.waitKey(1)
                                         if key_overlay == ord('y'):
+                                            
+                                            player_move()
                                             break
                                         elif key_overlay == ord('n'):
                                             break
@@ -100,11 +101,11 @@ def create_window():
                                     cv2.imshow('camera', event_image)
                                     key_overlay = cv2.waitKey(0)
 
-                                    if key_overlay == ord('y'):
-                                        cv2.imshow('camera', flipped_frame)
-                        elif key == 13:  # 엔터 키를 누르면 플레이어 이동
-                            print("엔터")
-                            player_move()
+
+                            else:
+                                
+                                player_move()
+                        
                                 
                 else:
                     print('프레임이 없습니다')
@@ -119,18 +120,8 @@ def create_window():
         return block_label
 
 
-    def move_player_and_draw_line(dx, dy):
-        global x, y, player, line_coords
-        canvas.move(player, dx * 70, dy * 70)
-        x += dx
-        y += dy
-        x1, y1 = x * 70 + 35, y * 70 + 35
-        x2, y2 = (x - dx) * 70 + 35, (y - dy) * 70 + 35
-        line_coords.append((x1, y1, x2, y2))
-        canvas.create_line(x1, y1, x2, y2, fill="blue", width=3)
-
     def player_move():
-        global x, y, maze, block_label
+        global mx, my, maze, block_label
         print("player_move")
 
         dir = block_label.split(' ')[0]
@@ -139,53 +130,68 @@ def create_window():
         if dir == "up" :
             block = 0
             for i in range(1,int(num)+1):
-                if maze[y-i][x] == 1:
+                if maze[my-i][mx] == 1:
                     block = 1
                     print("이동불가")
-                    # 막혀있어 못간다는걸 이미지로 표현
+
                     show_warning()
             if block == 0:
-                move_player_and_draw_line(0, -1*num)
-                y -= 1*num
+                for i in range(0,int(num)):
+                    canvas.create_rectangle(mx * 70, (my-i) * 70, mx * 70 + 69, (my-i) * 70 + 69, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 0, -1*num * 70)
+                my -= 1*num
 
         if dir == "down":
             block = 0
             for i in range(1,int(num)+1):
-                if maze[y+i][x] == 1:
+                if maze[my+i][mx] == 1:
                     block = 1
                     print("이동불가")
-                    # 막혀있어 못간다는걸 이미지로 표현
+
                     show_warning()
             if block == 0:
-                move_player_and_draw_line(0, 1*num)
-                y += 1*num
+                
+                for i in range(0,int(num)):
+                    canvas.create_rectangle(mx * 70, (my+i) * 70, mx * 70 + 69, (my+i) * 70 + 69, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 0, 1*num * 70)
+                my += 1*num
 
         if dir == "left" :
             block = 0
             for i in range(1,int(num)+1):
-                if maze[y][x-i] == 1:
+                if maze[my][mx-i] == 1:
                     block = 1
                     print("이동불가")
-                    # 막혀있어 못간다는걸 이미지로 표현
+
                     show_warning()
             if block == 0:
-                move_player_and_draw_line(-1*num, 0)
-                x -= 1*num
+                
+                for i in range(0,int(num)):
+                    canvas.create_rectangle((mx-i) * 70, my * 70, (mx-i) * 70 + 69, my * 70 + 69, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, -1*num * 70, 0)
+
+                mx -= 1*num
 
         if dir == "right":
+            print("재이동 mx", mx)
             block = 0
             for i in range(1,int(num)+1):
                 print("for",i)
-                if maze[y][x+i] == 1:
+                if maze[my][mx+i] == 1:
                     block = 1
                     print("이동불가")
-                    # 막혀있어 못간다는걸 이미지로 표현 
+
                     show_warning()
             if block == 0:
-                move_player_and_draw_line(1*num, 0)
-                x += 1*num
 
-        if maze[y][x] == 2:
+                for i in range(0,int(num)):
+                    canvas.create_rectangle((mx+i) * 70, my * 70, (mx+i) * 70 + 69, my * 70 + 69, fill="pink", width=0, tag="PAINT")
+                canvas.move(player, 1*num * 70, 0)
+
+                mx += 1*num
+                print("mx_val",mx)
+
+        if maze[my][mx] == 2:
             messagebox.showinfo("미션 성공", "목적지에 도착! 축하합니다.")
 
     def on_camera_button_click():
@@ -209,18 +215,18 @@ def create_window():
 
 
     def redraw_maze(maze, end_image_path, end_coords):
-        global img_end, player_img, player, x, y, line_coords
+        global img_end, player_img, player, mx, my, line_coords
         canvas.delete("all")
         for y in range(7):
             for x in range(10):
                 if maze[y][x] == 1:
-                    canvas.create_rectangle(x * 70, y * 70, (x + 1) * 70, (y + 1) * 70, fill="skyblue", outline="white")
+                    canvas.create_rectangle(x * 70, y * 70, (x + 1) * 70, (y + 1) * 70, fill="skyblue", outline="black")
         img_end = tk.PhotoImage(file=end_image_path, master=window)
         canvas.create_image(*end_coords, image=img_end)
         player_img = tk.PhotoImage(file="../event_img/ai_img.png", master=window)
         player = canvas.create_image(105, 105, image=player_img)
-        x = 1
-        y = 1
+        mx = 1
+        my = 1
         line_coords = []
 
     def create_button(frame, text, command):
