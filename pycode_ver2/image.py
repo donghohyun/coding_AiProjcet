@@ -6,9 +6,9 @@ class ImageProcessor:
 
     def img_processed(self, img_ori):
         # 원본이미지를 이진화 작업 후 외각선에서 꼭짓점을 구한다.
-        gray = cv2.cvtColor(img_ori, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        gray = cv2.cvtColor(img_ori, cv2.COLOR_BGR2GRAY) ## PI1
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0) ## PI2
+        _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) ## PI3
 
         contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         # 웹캠으로 사진을 찍을때 이미지가 뒤집혀 보여 이를 해결하기 위해 이미지를 반전하여 보여준다.
@@ -23,7 +23,7 @@ class ImageProcessor:
         edge_point = []
         for point in approx:
             x, y = point[0]
-            edge_point.append((x, y))
+            edge_point.append((x, y)) ## PI4
 
         left_top_screen = (float('inf'), float('inf'))
         right_top_screen = (float('-inf'), float('inf'))
@@ -44,25 +44,12 @@ class ImageProcessor:
         width, height = 800, 600
         dst_points = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
         perspective_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-        warped_image = cv2.warpPerspective(binary, perspective_matrix, (width, height))
-        # 이미지 인식률을 높이기 위해 이미지를  RGB값에서 특정값을 기준으로 이진화 한다.
-        RGB_img = cv2.cvtColor(warped_image, cv2.COLOR_BGR2RGB)
-        R_img1, G_img1, B_img1 = cv2.split(RGB_img)
+        warped_image = cv2.warpPerspective(binary, perspective_matrix, (width, height)) ## PI5
+        # 이미지를 RGB영역으로 변환해준다.
+        warped_image_rgb = cv2.cvtColor(warped_image, cv2.COLOR_BGR2RGB)
         
-        N = 150 # 해당 값을 기준으로 큰것은 255로 작은것은 0으로 반환하여 이미지 이진화
-
-        for h in range(RGB_img.shape[0]):
-            for w in range(RGB_img.shape[1]):
-                if(np.int32(R_img1[h, w]) > N):
-                    R_img1[h, w] = G_img1[h, w] = B_img1[h, w] = 255
-                else:
-                    R_img1[h, w] = G_img1[h, w] = B_img1[h, w] = 0
-
-        RGB_img[:, :, 0] = R_img1
-        RGB_img[:, :, 1] = G_img1
-        RGB_img[:, :, 2] = B_img1
-
-        return RGB_img
+        # 평면화된 이미지를 반환한다.
+        return warped_image_rgb
 
     def img_crop_processed(self, img, x_val, y_val, w_val, h_val):
         img_crop = img[y_val:y_val+h_val, x_val:x_val+w_val]
@@ -74,7 +61,7 @@ class ImageProcessor:
         # 블럭의 색이 다르더라도 인식가능하게끔 외각선을 구한다.
         img_blur_thresh = cv2.adaptiveThreshold(
                                 img_blurred,
-                                maxValue=1,
+                                maxValue=255,
                                 adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                 thresholdType=cv2.THRESH_BINARY_INV,
                                 blockSize=19,

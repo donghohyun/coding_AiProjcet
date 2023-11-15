@@ -56,7 +56,7 @@ def create_window():
                             break
                         elif key == 32: # spacebar
                             
-                            cv2.imwrite('../move_img/photo.jpg', flipped_frame)
+                            cv2.imwrite('../img_data/pending_img/original_img.jpg', flipped_frame)
                             print("촬영을 완료했습니다.")
 
                             # 촬영된 이미지를 전처리
@@ -66,10 +66,13 @@ def create_window():
                             # 이미지에서 숫자 영역과 방향 영역을 따로 구분함
                             processed_dir = ImageProcessor().img_crop_processed(processed_img, 154, 170, 340, 250)
                             processed_num = ImageProcessor().img_crop_processed(processed_img, 500, 170, 175, 250)
+                            cv2.imwrite('../img_data/pending_img/direction_img.jpg', processed_dir) ## PI6
+                            cv2.imwrite('../img_data/pending_img/number_img.jpg', processed_num) ## PI7
                             print("이미지 분리 완료")
 
-                            predictions_dir, pre_value_dir = img_prediction(processed_dir)
+                            predictions_dir, pre_value_dir = img_prediction(processed_dir) 
                             predictions_num, pre_value_num = img_prediction(processed_num)
+                            
                             print("이미지 예측 완료")
                             block_name = predictions_dir + ' ' + predictions_num
                             block_label = block_name
