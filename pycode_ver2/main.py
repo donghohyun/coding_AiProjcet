@@ -45,7 +45,7 @@ def create_window():
                 
                 if ret:
                     flipped_frame = cv2.flip(frame, -1)
-                    flipped_frame = cv2.resize(flipped_frame,(900,675))
+                    flipped_frame = cv2.resize(flipped_frame,(900,506))
                     
                     cv2.imshow('camera', flipped_frame)
 
@@ -89,7 +89,7 @@ def create_window():
                                             'up 1', 'up 2', 'up 3', 'up 4', 'up 5']
                                 if block_name in block_list:
                                     event_image = cv2.imread(f'../event_img/{block_name}.jpg')
-                                    event_image = cv2.resize(event_image,(900,675)) # 이미지 사이즈 변경
+                                    event_image = cv2.resize(event_image,(900,506)) # 이미지 사이즈 변경
                                     cv2.imshow('camera', event_image)
 
                                     while True:
@@ -106,7 +106,7 @@ def create_window():
                                 else:
                                     print("블럭 인식 안됨")
                                     event_image = cv2.imread(f'../event_img/no block.jpg')
-                                    event_image = cv2.resize(event_image,(900,675)) # 이미지 사이즈 변경
+                                    event_image = cv2.resize(event_image,(900,506)) # 이미지 사이즈 변경
                                     cv2.imshow('camera', event_image)
                                     key_overlay = cv2.waitKey(0)
 
